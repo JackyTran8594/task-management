@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
@@ -25,9 +24,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @Autowired
     private MemberService memberService;
 
-    @Autowired
-    private RabbitMqSender rabbitMqSender;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RabbitMqReceiver() {
@@ -35,10 +31,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
     }
 
-//    @Autowired
-//    private
-//
-//    public UserDTO userDTO = new UserDTO();
+
 
     @RabbitListener(queues = {"${spring.rabbitmq.queue}"})
     public void receivedMessage(UserDTO user){
@@ -64,7 +57,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     // end
 
     // receiving from gateway
-    @RabbitListener(queues = {"${spring.rabbitmq.queue-received}"})
+    @RabbitListener(queues = {"${spring.rabbitmq.queue-task}"})
     public void receivedMessageFromGateway(UserDTO user){
         logger.info("User Details Received is from Gateway " + user.getUsername());
         MemberDTO member = memberService.findByUsername(user.getUsername());

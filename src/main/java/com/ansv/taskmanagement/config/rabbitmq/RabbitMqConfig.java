@@ -36,8 +36,7 @@ public class RabbitMqConfig {
 
     @Bean
     public AmqpAdmin amqpAdmin() {
-        RabbitAdmin rabbitAdmin
-                = new RabbitAdmin(connectionFactory());
+        RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory());
         rabbitAdmin.setIgnoreDeclarationExceptions(true);
         return rabbitAdmin;
     }
@@ -51,13 +50,13 @@ public class RabbitMqConfig {
 
     @Bean(name = "rabbitListenerContainerFactory")
     public SimpleRabbitListenerContainerFactory simpleRabbitListenerContainerFactory() {
-       SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-       factory.setConnectionFactory(connectionFactory());
-       factory.setMessageConverter(jsonMessageConverter());
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory());
+        factory.setMessageConverter(jsonMessageConverter());
 
         factory.setConcurrentConsumers(3);
         factory.setMaxConcurrentConsumers(10);
-       return factory;
+        return factory;
     }
 
     @Bean
@@ -71,42 +70,13 @@ public class RabbitMqConfig {
         return new MessageListenerAdapter(receiver, "receiveMessage");
     }
 
-
     // sender to
-    @Bean
-    public Queue queue() {
-        return new Queue(environment.getProperty("spring.rabbitmq.queue"));
-    }
 
     @Bean
     public DirectExchange directExchange() {
         return new DirectExchange(environment.getProperty("spring.rabbitmq.exchange"));
     }
 
-    @Bean
-    public Binding binding() {
-        return BindingBuilder.bind(queue()).to(directExchange()).with(environment.getProperty("spring.rabbitmq.routingkey"));
-//        return BindingBuilder.bind(queue()).to(directExchangeReceived()).with(environment.getProperty("spring.rabbitmq.routingkey"));
-    }
-    // sender
-
-
-    // receiver from gateway
-    @Bean
-    public Queue queueReceived() {
-        return new Queue(environment.getProperty("spring.rabbitmq.queue-received"));
-    }
-
-    @Bean
-    public DirectExchange directExchangeReceived() {
-        return new DirectExchange(environment.getProperty("spring.rabbitmq.exchange-received"));
-    }
-    // end receiver
-
-    @Bean
-    public Binding bindingReceived() {
-        return BindingBuilder.bind(queueReceived()).to(directExchangeReceived()).with(environment.getProperty("spring.rabbitmq.routingkey-received"));
-    }
     // sender
 
     // sender to human
@@ -115,10 +85,10 @@ public class RabbitMqConfig {
         return new Queue(environment.getProperty("spring.rabbitmq.queue-human"));
     }
 
-
     @Bean
     public Binding bindingSenderToHuman() {
-        return BindingBuilder.bind(queueSenderToHuman()).to(directExchangeReceived()).with(environment.getProperty("spring.rabbitmq.routingkey-human"));
+        return BindingBuilder.bind(queueSenderToHuman()).to(directExchange())
+                .with(environment.getProperty("spring.rabbitmq.routingkey-human"));
     }
     // sender
 
@@ -128,12 +98,25 @@ public class RabbitMqConfig {
         return new Queue(environment.getProperty("spring.rabbitmq.queue-task-human"));
     }
 
-
     @Bean
     public Binding bindingHumanSender() {
-        return BindingBuilder.bind(queueReceiverFromHuman()).to(directExchangeReceived()).with(environment.getProperty("spring.rabbitmq.routingkey-task-human"));
+        return BindingBuilder.bind(queueReceiverFromHuman()).to(directExchange())
+                .with(environment.getProperty("spring.rabbitmq.routingkey-task-human"));
+
     }
     // and receiver
 
+    // from gateway
+      @Bean
+    public Queue queueReceiveFromGateway() {
+        return new Queue(environment.getProperty("spring.rabbitmq.queue-task"));
+    }
 
+    @Bean
+    public Binding bindingFromGateway() {
+        return BindingBuilder.bind(queueReceiverFromHuman()).to(directExchange())
+                .with(environment.getProperty("spring.rabbitmq.routingkey-task"));
+
+    }
+    // end
 }
